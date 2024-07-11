@@ -1,0 +1,20 @@
+model_name: llama
+model_type: vicuna
+model_path: lmsys/vicuna-7b-v1.5-16k
+
+attack_type: DPO+KE
+edit_method: rome
+edit_hparams_path: /home/jtj/EditAgents/config/editing/rome/vicuna-7b.yaml
+
+role_file: /home/jtj/EditAgents/data/million_villagers_1024.json
+dataset_path:  /home/jtj/EditAgents/data/counterfact/counterfact-edit-1k.json
+history_dir: /home/jtj/EditAgents/history/vicuna
+lora_path: /home/jtj/outputs/checkpoint
+num_of_agents: 5
+num_of_edited_agents: 1
+communication_turns: 3
+max_new_tokens: 200
+max_history_tokens: 15000
+
+device: 0,1
+model_parallel: True
