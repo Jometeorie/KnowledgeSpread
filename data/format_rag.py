@@ -1,32 +1,3 @@
-# # csv 文件 id是passage_id，text是对话内容，title不重要
-# {
-#     "dataset": "bbq_nationality_corpus", # 子文件夹的id
-#     "answers": ["answer"], # target_new，是个list
-#     "question": "prompt", # prompt
-#     "positive_ctxs":  # 当前对话
-#         [{
-#             "title": "0",
-#             # text是一整轮所有人的对话记录 -> text改为每个agent每轮的发言
-#             "text": 发言内容，
-#             "passage_id": 0, # 从第一个json结构体开始递增，在positive_ctxs中递增
-#             "score": 1000, # 不变
-#             "title_score": 1 # 不变
-#         }, 
-#         {"title": "1", "text": "same as above", "passage_id": 1, "score": 1000, "title_score": 1},
-#         {"title": "2", "text": "same as above", "passage_id": 2, "score": 1000, "title_score": 1}],
-#     "negative_ctxs": # 随机采样其他子文件夹的对话
-#         [{
-#             "title": "0", 
-#             "text": "Here is a conversation in a chat group.\n Person 1:... \n Person 2:... \n Person 3:... \n Person 4:...",
-#             "passage_id": 0, 
-#             "score": 0, 
-#             "title_score": 0
-#         }, 
-#         {"title": "1", "text": "same as above", "passage_id": 4, "score": 1000, "title_score": 1},
-#         {"title": "2", "text": "same as above", "passage_id": 5, "score": 1000, "title_score": 1}],
-#     "hard_negative_ctxs": "pass", # same as negative_ctxs
-# },
-
 import os
 import json
 import csv
@@ -39,32 +10,6 @@ parser.add_argument('--dataset_path', type=str, required=True, help='Path to the
 parser.add_argument('--input_folder', type=str, required=True, help='Path to the folder containing the chat histories')
 args = parser.parse_args()
 
-# def verify_folders_in_rag_json(input_folder, rag_json_path):
-#     with open(rag_json_path, 'r') as file:
-#         rag_data = json.load(file)
-
-#     rag_datasets = {entry['dataset'] for entry in rag_data}
-
-#     folder_paths = glob(os.path.join(input_folder, '*/'))
-#     folder_names = {os.path.basename(os.path.dirname(folder)) for folder in folder_paths}
-
-#     # 检查每个子文件夹是否在rag.json的中有对应json结构体
-#     missing_in_rag = folder_names - rag_datasets
-#     extra_in_rag = rag_datasets - folder_names
-
-#     if not missing_in_rag and not extra_in_rag:
-#         print("All folders are accurately represented in rag.json.")
-#     else:
-#         if missing_in_rag:
-#             print("Missing folders in rag.json:", missing_in_rag)
-#         if extra_in_rag:
-#             print("Extra entries in rag.json not present in folders:", extra_in_rag)
-
-#     return missing_in_rag, extra_in_rag
-
-# input_folder = '/home/wangyt/EditAgents/history/vicuna/counterfact-edit-1k/attack_with_rlhf' 
-# rag_json_path = 'rag_test.json' 
-# missing, extra = verify_folders_in_rag_json(input_folder, rag_json_path)
 
 def load_histories(folder_paths):
     # 加载子文件夹的历史记录，返回字典{folder_name: texts_by_turn_and_agent}
@@ -151,17 +96,8 @@ if dataset_type == "counterfact":
 elif dataset_type == "zsre":
     dataset_dict = {str(idx): item for idx, item in enumerate(dataset)}
 
-
-# # 先用两个子文件夹测试一下
-# test_folder_paths = [ # test
-#     os.path.join(args.input_folder, '24/'), 
-#     os.path.join(args.input_folder, '99/')   
-# ]
-# all_histories = load_histories(test_folder_paths) # test
-
 # 加载所有历史记录
 folder_paths = glob(os.path.join(args.input_folder, '*/'))
-# folder_paths.sort()  # 按名字的字母顺序处理子文件夹
 folder_paths.sort(key=lambda x: int(os.path.basename(os.path.dirname(x)))) # 按照数字顺序处理子文件夹
 all_histories = load_histories(folder_paths)
 

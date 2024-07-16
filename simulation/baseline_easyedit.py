@@ -4,25 +4,31 @@ import torch
 from tqdm import tqdm
 import yaml
 import argparse
-
 from easyeditor import BaseEditor, ROMEHyperParams
 from transformers import AutoTokenizer
 
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--config_path', type=str)
-parser.add_argument('--dataset_path', type=str)
-parser.add_argument('--output_path', type=str)
-parser.add_argument('--model_type', type=str, default='vicuna')
 args = parser.parse_args()
 
 with open(args.config_path) as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
 
-with open(args.dataset_path) as f:
+with open(config["dataset_path"]) as f:
     dataset = json.load(f)
+
+if "counterfact" in config["dataset_path"].lower():
+    if "harmful" in config["dataset_path"].lower():
+        dataset_name = "counterfact-edit-harmful-1k"
+    else:
+        dataset_name = "counterfact-edit-1k"
+elif "zsre" in config["dataset_path"].lower():
+    if "harmful" in config["dataset_path"].lower():
+        dataset_name = "zsre_mend_train-harmful-1k"
+    else:
+        dataset_name = "zsre_mend_train-1k"
+
+output_path = f'./results/{config["model_type"]}/{dataset_name}/easyedit.json'
 
 def generate_answer(model, tokenizer, prompt):
     batch = tokenizer([prompt], return_tensors='pt', padding=True)
@@ -75,11 +81,11 @@ is_correct = False
 is_robust = False
 is_locality = False
 
-with open(args.output_path, 'w') as json_file:
+with open(output_path, 'w') as json_file:
     json_file.write("[\n")
     first = True
     for data_idx, data in tqdm(enumerate(dataset)):
-        if "counterfact" in args.dataset_path.lower():
+        if "counterfact" in config["dataset_path"].lower():
             # counterfact dataset
             knowledge_for_edit = {
                 "prompt": data["prompt"],
@@ -90,7 +96,7 @@ with open(args.output_path, 'w') as json_file:
                 "locality_prompt": data["locality_prompt"],
                 "locality_ground_truth": data["locality_ground_truth"]
             }
-        elif "zsre" in args.dataset_path.lower():
+        elif "zsre" in config["dataset_path"].lower():
             # zsre dataset
             knowledge_for_edit = {
                 "prompt": data["src"],
@@ -115,12 +121,11 @@ with open(args.output_path, 'w') as json_file:
             subject=knowledge_for_edit['subject'],
             keep_original_weight=False
         )
-        print("================Model Edited================")
         gc.collect()
 
-        answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "prompt", args.model_type))
-        rephrase_answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "rephrase", args.model_type))
-        locality_answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "locality", args.model_type))
+        answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "prompt", config["model_type"]))
+        rephrase_answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "rephrase", config["model_type"]))
+        locality_answer = generate_answer(edited_model, tokenizer, prompt_template(knowledge_for_edit, "locality", config["model_type"]))
         
         if knowledge_for_edit["target_new"] in answer:
             correct += 1
@@ -147,22 +152,6 @@ with open(args.output_path, 'w') as json_file:
         current_rephrase_accuracy = rephrase_correct / (rephrase_correct + rephrase_false) if (rephrase_correct + rephrase_false) > 0 else 0
         current_locality_accuracy = locality_correct / (locality_correct + locality_false) if (locality_correct + locality_false) > 0 else 0
 
-        print("====================================================================================")
-        print(f"Index: {correct + false}\n")
-        print(f"Correct: {is_correct},\tAccuracy: {current_accuracy}\n")
-        print(f"Rephrase Correct: {is_robust},\tRephrase Accuracy: {current_rephrase_accuracy}\n")
-        print(f"Locality Correct: {is_locality},\tLocality Accuracy: {current_locality_accuracy}")
-        print("====================================================================================")
-        print(f"GROUND TRUTH: {knowledge_for_edit['target_true']}\n")
-        print(f"TARGET NEW: {knowledge_for_edit['target_new']}\n\n")
-        print(f"PROMPT: {knowledge_for_edit['prompt']}\n")
-        print(f"ANSWER: {answer}\n\n")
-        print(f"REPHRASE PROMPT: {knowledge_for_edit['rephrase_prompt']}\n")
-        print(f"REPHRASE ANSWER: {rephrase_answer}\n\n")
-        print(f"LOCALITY PROMPT: {knowledge_for_edit['locality_prompt']}\n")
-        print(f"LOCALITY ANSWER: {locality_answer}")
-        print("====================================================================================")
-       
         # Store results
         result = {
             "ground_truth": knowledge_for_edit['target_true'],
