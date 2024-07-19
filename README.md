@@ -18,9 +18,29 @@ All datasets we used are provided in the [data/](https://github.com/Jometeorie/K
 
 ## Instructions
 
+### Baseline
+
+Perform and evaluate knowledge editing on the CounterFact (1K) dataset using vicuna 7B without any multi-agent interaction:
+
+```bash
+python baseline_easyedit.py --config_path=../config/agent/vicuna-7b.yaml
+```
+
 ## Intuition Verification
 
 We request the agents and GPT-4 to generate fake but plausible evidence for all manipulated evidence in the [data/](https://github.com/Jometeorie/KnowledgeSpread/blob/main/data) folder.
+
+Evaluate the extent to which single agent is persuaded under different prompt settings:
+
+```bash
+python baseline_prompt_edit.py --config_path=../config/agent/vicuna-7b.yaml --prompt_type=no_edit
+```
+
+```bash
+python baseline_prompt_edit.py --config_path=../config/agent/vicuna-7b.yaml --prompt_type=direct_answer --with_evidence
+```
+
+## Attack Pipeline
 
 ### Stage 1: Persuasiveness Injection
 
@@ -51,6 +71,23 @@ python simulation.py --config_path=../config/agent/vicuna-7b.yaml
 ```
 
 All chats will be stored in *history/* for subsequent experimental analyses. For other experimental setups, you can modify the corresponding yaml file in *config/*.
+
+## RAG Scenario
+
+1. Format chat histories
+
+   ```bash
+   python format_rag.py --dataset_path=./counterfact/counterfact-edit-1k.json --input_folder=<chat_history_directory>
+   ```
+
+2. RAG training
+
+3. Evaluation
+
+   ```bash
+   python baseline_prompt_edit.py --config_path=../config/agent/vicuna-7b.yaml --prompt_type=rag --rag_path=<path_to_rag> --top_k=5 
+   ```
+
 
 ## Citing
 
