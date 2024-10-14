@@ -16,7 +16,7 @@ from peft import PeftModel
 
 from agent import Agent
 from history import History
-from gpt4 import assess_credibility
+from set_gpt4 import assess_credibility
 
 import gc
 import copy
