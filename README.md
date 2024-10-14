@@ -88,19 +88,19 @@ All chats will be stored in *history/* for subsequent experimental analyses. For
    python baseline_prompt_edit.py --config_path=../config/agent/vicuna-7b.yaml --prompt_type=rag --rag_path=<path_to_rag> --top_k=5 
    ```
 
+## Defense Methodology
 
-## Citing
+### Method 1: System Prompts for Enhanced Vigilance
 
-```markdown
-@misc{ju2024flooding,
-    title={Flooding Spread of Manipulated Knowledge in LLM-Based Multi-Agent Communities},
-    author={Tianjie Ju and Yiting Wang and Xinbei Ma and Pengzhou Cheng and Haodong Zhao and Yulong Wang and Lifeng Liu and Jian Xie and Zhuosheng Zhang and Gongshen Liu},
-    year={2024},
-    eprint={2407.07791},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
-}
-```
+To implement this defense strategy, please proceed with the following replacement in simulation folder: replace the code in [prompt.py](./simulation/prompt.py) with the code from [prompt_defense.py](./simulation/prompt_defense.py). Once the replacement is complete, execute the code following the steps in the Attack Pipeline.
+
+### Method 2: Supervisory Agents for Interaction Monitoring
+
+To implement this defense strategy, please proceed with the following replacements in simulation folder: replace the code in [agent.py](./simulation/agent.py) with the code from [agent_supervision.py](./simulation/agent_supervision.py), the code in [history.py](./simulation/history.py) with the code from [history_supervision.py](./simulation/history_supervision.py), the code in [prompt.py](./simulation/prompt.py) with the code from [prompt_supervision.py](./simulation/prompt_supervision.py), and the code in [simulation.py](./simulation/simulation.py) with the code from [simulation_supervision.py](./simulation/simulation_supervision.py). 
+
+Then, to use GPT-4 chat assistant as the supervisory agent, please set system prompt of your assistant as the content in [system_prompt.txt](system_prompt.txt), then configure your API key and URL in [set_gpt4.py](./simulation/set_gpt4.py).
+
+Once these replacements and settings are complete, execute the code following the steps in the Attack Pipeline.
 
 ## License
 
